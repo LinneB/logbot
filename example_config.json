@@ -1,0 +1,15 @@
+{
+    "database": {
+        "host": "MYSQL_SERVER",
+        "user": "MYSQL_USER",
+        "password": "MYSQL_PASSWORD",
+        "name": "MYSQL_DATABASE"
+    },
+    "twitch": {
+        "clientId": "TWITCH_CLIENTID",
+        "apioauth": "TWITCH_APPTOKEN",
+        "botUsername": "TWITCH_USERNAME",
+        "botOauth": "TWITCH_OAUTH",
+        "channel": "TWITCH_CHANNEL"
+    }
+}
