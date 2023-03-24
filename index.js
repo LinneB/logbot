@@ -28,7 +28,6 @@ db.connect((err) => {
 });
 
 const { botUsername, botOauth, channel, liveInterval} = twitch;
-console.log(liveInterval, table)
 
 // Twitch configuration options
 const opts = {
@@ -36,7 +35,6 @@ const opts = {
     username: botUsername,
     password: botOauth,
   },
-  /* TODO: Is it possible to store the channels directly in an array under config.json */
   channels: [channel],
 };
 
@@ -68,13 +66,10 @@ client.on("message", (channel, tags, message, self) => {
 
 // Check channel status every minute
 setInterval(async () => {
-  /* TODO: Why can't we use the channel name directly from the configuration itself? Why is slice required? - slice(1) removes the first character from the channel name */
-  console.log(channel)
   channelLive = await utils.checkIfLive(channel, config);
   console.log(
     `Channel ${channel} is ${channelLive ? "live" : "offline"}`
   );
-  /* TODO: should this be part of configuration too? */
 }, liveInterval);
 
 // Connect to Twitch
