@@ -4,13 +4,15 @@
         "host": "MYSQL_SERVER",
         "user": "MYSQL_USER",
         "password": "MYSQL_PASSWORD",
-        "name": "MYSQL_DATABASE"
+        "name": "MYSQL_DATABASE",
+        "table": "LOGGING_TABLE"
     },
     "twitch": {
         "clientId": "TWITCH_CLIENTID",
         "apioauth": "TWITCH_APPTOKEN",
         "botUsername": "TWITCH_USERNAME",
         "botOauth": "TWITCH_OAUTH",
-        "channel": "TWITCH_CHANNEL"
+        "channel": "TWITCH_CHANNEL",
+        "liveInterval": 60000
     }
 }
