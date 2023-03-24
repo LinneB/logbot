@@ -7,4 +7,4 @@ I don't have much experience with JS so the script may be a bit shit.
 
 ## How to start the script?
 
-TBD
+Use command "node index.js"
