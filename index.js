@@ -3,14 +3,13 @@ const mysql = require("mysql");
 const fs = require("fs");
 const emoji = require("node-emoji");
 const utils = require("./utils");
-const { CHECK_LIVE_TIME, queries } = require("./constants");
 
 // Read config.json
 const config = utils.parseJSON(fs.readFileSync("config.json"), {});
 
 const { database = {}, twitch = {} } = config || {};
 
-const { host, user, password, name: databaseName } = database;
+const { host, user, password, name: databaseName, table } = database;
 
 const db = mysql.createConnection({
   host,
@@ -28,7 +27,8 @@ db.connect((err) => {
   console.log("Connected to database!");
 });
 
-const { botUsername, botOauth, channel } = twitch;
+const { botUsername, botOauth, channel, liveInterval} = twitch;
+console.log(liveInterval, table)
 
 // Twitch configuration options
 const opts = {
@@ -55,7 +55,7 @@ client.on("message", (channel, tags, message, self) => {
   const demojifiedMessage = emoji
     .unemojify(message)
     .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "");
-  const sql = queries.insert.chatLog;
+  const sql = `INSERT INTO ${table} (channel, username, message, live) VALUES (?, ?, ?, ?)`;
   console.log(`${channelLive}, ${channel} - ${username}: ${message}`);
   db.query(
     sql,
@@ -69,12 +69,13 @@ client.on("message", (channel, tags, message, self) => {
 // Check channel status every minute
 setInterval(async () => {
   /* TODO: Why can't we use the channel name directly from the configuration itself? Why is slice required? - slice(1) removes the first character from the channel name */
-  channelLive = await utils.checkIfLive(opts.channels[0].slice(1), config);
+  console.log(channel)
+  channelLive = await utils.checkIfLive(channel, config);
   console.log(
-    `Channel ${opts.channels[0]} is ${channelLive ? "live" : "offline"}`
+    `Channel ${channel} is ${channelLive ? "live" : "offline"}`
   );
   /* TODO: should this be part of configuration too? */
-}, CHECK_LIVE_TIME);
+}, liveInterval);
 
 // Connect to Twitch
 client
