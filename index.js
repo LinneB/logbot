@@ -47,17 +47,24 @@ const client = new tmi.client(opts);
 // Register event handlers
 client.on("message", (channel, tags, message, self) => {
   if (self) return; // Ignore messages from the bot
-  const username = tags.username;
 
+  const username = tags.username;
+  const isMod = tags.mod;
+  // Sometimes the VIP badge is a little weird, so this loop is required, also make sure to make the default in the SQL column is False.
+  let isVip = false;
+  if (tags.vip === true) {
+    isVip = true;
+  };
+  
   // Replace emojis with their text representation & remove invalid characters
   const demojifiedMessage = emoji
     .unemojify(message)
     .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "");
-  const sql = `INSERT INTO ${table} (channel, username, message, live) VALUES (?, ?, ?, ?)`;
-  console.log(`${channelLive}, ${channel} - ${username}: ${message}`);
+    const sql = `INSERT INTO ${table} (channel, username, message, live, isvip, ismod) VALUES (?, ?, ?, ?, ?, ?)`;
+    console.log(`${channelLive ? "Live " : "Offline "}[${channel}] ${tags.mod ? "MOD " : ""}${isVip ? "VIP " : ""}${username}: ${message}`);
   db.query(
     sql,
-    [channel, username, demojifiedMessage, channelLive],
+    [channel, username, demojifiedMessage, channelLive, isVip, isMod],
     (err, _) => {
       if (err) console.error("Error inserting into database: ", err);
     }
