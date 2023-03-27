@@ -16,7 +16,8 @@ Use `node index.js` to start the logbot.
 ## MySQL table creation
 
 This is an example 'create table' command that should work with the script, but you can edit it to fit your needs.
-`CREATE TABLE table_name (
+```
+CREATE TABLE table_name (
     id INT(11) NOT NULL AUTO_INCREMENT,
     channel VARCHAR(50) NOT NULL,
     username VARCHAR(50) NOT NULL,
@@ -26,4 +27,5 @@ This is an example 'create table' command that should work with the script, but 
     isvip TINYINT(1) NOT NULL DEFAULT 0,
     ismod TINYINT(1) NOT NULL DEFAULT 0,
     PRIMARY KEY (id)
-);`
+);
+```
