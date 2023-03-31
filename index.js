@@ -49,8 +49,12 @@ client.on("message", (channel, tags, message, self) => {
   if (self) return; // Ignore messages from the bot
 
   const username = tags.username;
-  const isMod = tags.mod;
-  const isVip = tags.vip;
+
+  let isSub = false;
+  if (tags.subscriber === true) {isSub = true;};
+  
+  let isVip = false;
+  if (tags.vip === true) {isVip = true;};
 
   // Replace emojis with their text representation & remove invalid characters
   const demojifiedMessage = emoji
