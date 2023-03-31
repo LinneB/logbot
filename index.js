@@ -50,8 +50,8 @@ client.on("message", (channel, tags, message, self) => {
 
   const username = tags.username;
 
-  let isSub = false;
-  if (tags.subscriber === true) {isSub = true;};
+  let isMod = false;
+  if (tags.mod === true) {isMod = true;};
   
   let isVip = false;
   if (tags.vip === true) {isVip = true;};
