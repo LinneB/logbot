@@ -50,12 +50,8 @@ client.on("message", (channel, tags, message, self) => {
 
   const username = tags.username;
   const isMod = tags.mod;
-  // Sometimes the VIP badge is a little weird, so this loop is required, also make sure to make the default in the SQL column is False.
-  let isVip = false;
-  if (tags.vip === true) {
-    isVip = true;
-  };
-  
+  const isVip = tags.vip;
+
   // Replace emojis with their text representation & remove invalid characters
   const demojifiedMessage = emoji
     .unemojify(message)
