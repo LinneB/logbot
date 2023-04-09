@@ -49,22 +49,17 @@ client.on("message", (channel, tags, message, self) => {
   if (self) return; // Ignore messages from the bot
 
   const username = tags.username;
-
-  let isMod = false;
-  if (tags.mod === true) {isMod = true;};
-  
-  let isVip = false;
-  if (tags.vip === true) {isVip = true;};
+  const { vip: isVip = false, mod: isMod= false, subscriber: isSub = false } = tags || {};
 
   // Replace emojis with their text representation & remove invalid characters
   const demojifiedMessage = emoji
     .unemojify(message)
     .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "");
-    const sql = `INSERT INTO ${table} (channel, username, message, live, isvip, ismod) VALUES (?, ?, ?, ?, ?, ?)`;
-    console.log(`${channelLive ? "Live " : "Offline "}[${channel}] ${tags.mod ? "MOD " : ""}${isVip ? "VIP " : ""}${username}: ${message}`);
+  const sql = `INSERT INTO ${table} (channel, username, message, live, isvip, ismod, issub) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+  console.log(`${channelLive ? "Live " : "Offline "}[${channel}] ${tags.mod ? "MOD " : ""}${isVip ? "VIP " : ""}${username}: ${message}`);
   db.query(
     sql,
-    [channel, username, demojifiedMessage, channelLive, isVip, isMod],
+    [channel, username, demojifiedMessage, channelLive, isVip, isMod, isSub],
     (err, _) => {
       if (err) console.error("Error inserting into database: ", err);
     }
