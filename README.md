@@ -8,6 +8,7 @@ I don't have much experience with JS so the script may be a bit shit.
 ## How to run the script
 
 Copy the 'example_config.json' file to 'config.json', and configure all the variables there.
+
 **Note that 'liveInterval' is in milliseconds, so 60000 would be 60 seconds.*
 
 Use `npm install` to install all dependencies.
@@ -26,6 +27,7 @@ CREATE TABLE table_name (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     isvip TINYINT(1) NOT NULL DEFAULT 0,
     ismod TINYINT(1) NOT NULL DEFAULT 0,
+    issub TINYINT(1) NOT NULL DEFAULT 0,
     PRIMARY KEY (id)
 );
 ```
