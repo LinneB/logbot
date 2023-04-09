@@ -56,7 +56,7 @@ client.on("message", (channel, tags, message, self) => {
     .unemojify(message)
     .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "");
   const sql = `INSERT INTO ${table} (channel, username, message, live, isvip, ismod, issub) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-  console.log(`${channelLive ? "Live " : "Offline "}[${channel}] ${tags.mod ? "MOD " : ""}${isVip ? "VIP " : ""}${username}: ${message}`);
+  console.log(`${channelLive ? "Live " : "Offline "}[${channel}] ${isSub ? "SUB " : ""}${isMod ? "MOD " : ""}${isVip ? "VIP " : ""}${username}: ${message}`);
   db.query(
     sql,
     [channel, username, demojifiedMessage, channelLive, isVip, isMod, isSub],
