@@ -17,7 +17,7 @@ async function checkIfLive(config = {}) {
     } = channelStreamResponse || {};
     return streamData.length > 0;
   } catch (error) {
-    console.error(`Error while checking if ${channelName} is live: `, error);
+    console.error(`ERROR: Error getting live status: `, error);
   }
 }
 

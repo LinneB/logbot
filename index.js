@@ -21,10 +21,10 @@ const db = mysql.createConnection({
 // Connect to the database
 db.connect((err) => {
   if (err) {
-    console.error("Error connecting to database: ", err);
+    console.error("ERROR: Error connecting to database: ", err);
     return;
   }
-  console.log("Connected to database!");
+  console.log("INFO: Connected to database");
 });
 
 let channelLive = false;
@@ -46,12 +46,12 @@ client.on("message", (channel, tags, message, self) => {
     .unemojify(message)
     .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "");
   const sql = `INSERT INTO ${table} (channel, username, message, live, isvip, ismod, issub) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-  console.log(`${channelLive ? "Live " : "Offline "}[${channel}] ${isSub ? "SUB " : ""}${isMod ? "MOD " : ""}${isVip ? "VIP " : ""}${username}: ${message}`);
+  console.log(`INFO: ${channelLive ? "Live " : "Offline "}[${channel}] ${isSub ? "SUB " : ""}${isMod ? "MOD " : ""}${isVip ? "VIP " : ""}${username}: ${message}`);
   db.query(
     sql,
     [channel, username, demojifiedMessage, channelLive, isVip, isMod, isSub],
     (err, _) => {
-      if (err) console.error("Error inserting into database: ", err);
+      if (err) console.error("ERROR: Error inserting into database: ", err);
     }
   );
 });
@@ -60,7 +60,7 @@ client.on("message", (channel, tags, message, self) => {
 setInterval(async () => {
   channelLive = await utils.checkIfLive(config);
   console.log(
-    `Channel ${config.twitch.channel} is ${channelLive ? "live" : "offline"}`
+    `INFO: Channel ${config.twitch.channel} is ${channelLive ? "live" : "offline"}`
   );
 }, 60000);
 
@@ -68,8 +68,8 @@ setInterval(async () => {
 client
   .connect()
   .then(() => {
-    console.log("Connected to Twitch!");
+    console.log("INFO: Connected to Twitch");
   })
   .catch((err) => {
-    console.error("Error connecting to Twitch: ", err);
+    console.error("ERROR: Error connecting to Twitch: ", err);
   });
