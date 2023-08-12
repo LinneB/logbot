@@ -1,25 +1,14 @@
 const axios = require("axios");
 
-function parseJSON(inputString = "", fallback) {
-  if (inputString) {
-    try {
-      return JSON.parse(inputString);
-    } catch (e) {
-      return fallback;
-    }
-  }
-}
-
-async function checkIfLive(channelName = "", config = {}) {
-  const { twitch = {} } = config;
-  const { clientId, apioauth } = twitch;
+async function checkIfLive(config = {}) {
+  const { channel, clientid, token } = config.twitch;
   try {
     const channelStreamResponse = await axios.get(
-      `https://api.twitch.tv/helix/streams?user_login=${channelName}`,
+      `https://api.twitch.tv/helix/streams?user_login=${channel}`,
       {
         headers: {
-          "Client-ID": clientId,
-          Authorization: `Bearer ${apioauth}`,
+          "Client-ID": clientid,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -33,6 +22,5 @@ async function checkIfLive(channelName = "", config = {}) {
 }
 
 module.exports = {
-  parseJSON,
   checkIfLive,
 };

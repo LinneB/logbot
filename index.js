@@ -2,20 +2,20 @@ const tmi = require("tmi.js");
 const mysql = require("mysql");
 const fs = require("fs");
 const emoji = require("node-emoji");
+const toml = require("toml");
 const utils = require("./utils");
 
 // Read config.json
-const config = utils.parseJSON(fs.readFileSync("config.json"), {});
+const config = toml.parse(fs.readFileSync("config.toml"));
 
-const { database = {}, twitch = {} } = config || {};
-
-const { host, user, password, name: databaseName, table } = database;
+const { host, user, password, database, port = 3306, table } = config.database;
 
 const db = mysql.createConnection({
   host,
   user,
   password,
-  database: databaseName,
+  database,
+  port
 });
 
 // Connect to the database
@@ -27,22 +27,12 @@ db.connect((err) => {
   console.log("Connected to database!");
 });
 
-const { botUsername, botOauth, channel, liveInterval} = twitch;
-
-// Twitch configuration options
-const opts = {
-  identity: {
-    username: botUsername,
-    password: botOauth,
-  },
-  channels: [channel],
-};
-
-// Global variable used in multiple functional scopes - TODO: Can this be scoped?
 let channelLive = false;
 
 // Create a client with the given options
-const client = new tmi.client(opts);
+const client = new tmi.client({
+  channels: [config.twitch.channel]
+});
 
 // Register event handlers
 client.on("message", (channel, tags, message, self) => {
@@ -68,11 +58,11 @@ client.on("message", (channel, tags, message, self) => {
 
 // Check channel status every minute
 setInterval(async () => {
-  channelLive = await utils.checkIfLive(channel, config);
+  channelLive = await utils.checkIfLive(config);
   console.log(
-    `Channel ${channel} is ${channelLive ? "live" : "offline"}`
+    `Channel ${config.twitch.channel} is ${channelLive ? "live" : "offline"}`
   );
-}, liveInterval);
+}, 60000);
 
 // Connect to Twitch
 client
