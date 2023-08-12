@@ -5,7 +5,6 @@ const emoji = require("node-emoji");
 const toml = require("toml");
 const utils = require("./utils");
 
-// Read config.json
 const config = toml.parse(fs.readFileSync("config.toml"));
 
 const { host, user, password, database, port = 3306, table } = config.database;
@@ -18,7 +17,6 @@ const db = mysql.createConnection({
   port
 });
 
-// Connect to the database
 db.connect((err) => {
   if (err) {
     console.error("ERROR: Error connecting to database: ", err);
@@ -29,14 +27,12 @@ db.connect((err) => {
 
 let channelLive = false;
 
-// Create a client with the given options
 const client = new tmi.client({
   channels: [config.twitch.channel]
 });
 
-// Register event handlers
 client.on("message", (channel, tags, message, self) => {
-  if (self) return; // Ignore messages from the bot
+  if (self) return;
 
   const username = tags.username;
   const { vip: isVip = false, mod: isMod= false, subscriber: isSub = false } = tags || {};
@@ -56,7 +52,6 @@ client.on("message", (channel, tags, message, self) => {
   );
 });
 
-// Check channel status every minute
 setInterval(async () => {
   channelLive = await utils.checkIfLive(config);
   console.log(
@@ -64,7 +59,6 @@ setInterval(async () => {
   );
 }, 60000);
 
-// Connect to Twitch
 client
   .connect()
   .then(() => {
