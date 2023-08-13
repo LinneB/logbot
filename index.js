@@ -9,20 +9,13 @@ const config = toml.parse(fs.readFileSync("config.toml"));
 
 const { host, user, password, database, port = 3306, table } = config.database;
 
-const db = mysql.createConnection({
+const pool = mysql.createPool({
   host,
   user,
   password,
   database,
-  port
-});
-
-db.connect((err) => {
-  if (err) {
-    console.error("ERROR: Error connecting to database: ", err);
-    return;
-  }
-  console.log("INFO: Connected to database");
+  port,
+  connectionLimit: 50,
 });
 
 let channelLive = false;
@@ -41,11 +34,9 @@ client.on("message", (channel, tags, message, self) => {
   const demojifiedMessage = emoji
     .unemojify(message)
     .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "");
-  const sql = `INSERT INTO ${table} (channel, username, message, live, isvip, ismod, issub) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+  const query = `INSERT INTO ${table} (channel, username, message, live, isvip, ismod, issub) VALUES (?, ?, ?, ?, ?, ?, ?)`;
   console.log(`INFO: ${channelLive ? "Live " : "Offline "}[${channel}] ${isSub ? "SUB " : ""}${isMod ? "MOD " : ""}${isVip ? "VIP " : ""}${username}: ${message}`);
-  db.query(
-    sql,
-    [channel, username, demojifiedMessage, channelLive, isVip, isMod, isSub],
+  pool.query(query, [channel, username, demojifiedMessage, channelLive, isVip, isMod, isSub],
     (err, _) => {
       if (err) console.error("ERROR: Error inserting into database: ", err);
     }
