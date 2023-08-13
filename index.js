@@ -43,6 +43,13 @@ client.on("message", (channel, tags, message, self) => {
   );
 });
 
+(async () => {
+  channelLive = await utils.checkIfLive(config);
+  console.log(
+    `INFO: Channel ${config.twitch.channel} is ${channelLive ? "live" : "offline"}`
+  );
+})();
+
 setInterval(async () => {
   channelLive = await utils.checkIfLive(config);
   console.log(
