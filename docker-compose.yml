@@ -1,0 +1,9 @@
+version: '3'
+services:
+  logbot:
+    restart: unless-stopped
+    build: .
+    volumes:
+      - $PWD/config.toml:/usr/src/app/config.toml
+    environment:
+      NODE_ENV: production

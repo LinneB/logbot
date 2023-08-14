@@ -57,6 +57,11 @@ setInterval(async () => {
   );
 }, 60000);
 
+// This signal handler is required for the logbot to shut down properly when running in docker
+process.on("SIGTERM", () => {
+  process.exit();
+});
+
 client
   .connect()
   .then(() => {
