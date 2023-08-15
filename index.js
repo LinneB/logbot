@@ -25,18 +25,21 @@ const client = new tmi.client({
 });
 
 client.on("message", (channel, tags, message, self) => {
-  if (self) return;
-
-  const username = tags.username;
-  const { vip: isVip = false, mod: isMod= false, subscriber: isSub = false } = tags || {};
-
+  const {
+    username,
+    vip = false,
+    mod = false,
+    subscriber = false
+  } = tags;
   // Replace emojis with their text representation & remove invalid characters
   const demojifiedMessage = emoji
     .unemojify(message)
     .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "");
+  console.log(`INFO: ${channelLive ? "Live " : "Offline "}[${channel}] ${subscriber ? "SUB " : ""}${mod ? "MOD " : ""}${vip ? "VIP " : ""}${username}: ${demojifiedMessage}`);
   const query = `INSERT INTO ${table} (channel, username, message, live, isvip, ismod, issub) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-  console.log(`INFO: ${channelLive ? "Live " : "Offline "}[${channel}] ${isSub ? "SUB " : ""}${isMod ? "MOD " : ""}${isVip ? "VIP " : ""}${username}: ${message}`);
-  pool.query(query, [channel, username, demojifiedMessage, channelLive, isVip, isMod, isSub],
+  pool.query(
+    query,
+    [channel, username, demojifiedMessage, channelLive, vip, mod, subscriber],
     (err, _) => {
       if (err) console.error("ERROR: Error inserting into database: ", err);
     }
