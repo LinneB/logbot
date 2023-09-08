@@ -33,13 +33,19 @@ A Node.js project that logs messages from a twitch chat into a MySQL/MariaDB dat
 
 ### Database Setup
 
-You need to create a database and table:
+You first need to create a database:
 
 ```sql
 CREATE DATABASE IF NOT EXISTS logbot;
-CREATE TABLE logs (
+```
+
+You then need to create a table for each channel you want to log.
+
+NOTE: Make sure the table name is the same as the lowercase twitch channel name
+
+```sql
+CREATE TABLE forsen (
     id INT NOT NULL AUTO_INCREMENT,
-    channel VARCHAR(50) NOT NULL,
     username VARCHAR(50) NOT NULL,
     message VARCHAR(600),
     live TINYINT(1) NOT NULL,
@@ -64,18 +70,15 @@ Rename the example config file to `config.toml` and add your Twitch and database
 
 ```toml
 [twitch]
-# Channel to monitor
-channel=""
-# Twitch token
-clientid=""
-token=""
+channels=["forsen"]
+clientid="abdef123456"
+token="abcdef123456"
 
 [database]
 host=""
 database=""
 user=""
 password=""
-table=""
 # Optional, will default to 3306 if undefined
 # port=""
 ```

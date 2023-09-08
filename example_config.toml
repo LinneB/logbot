@@ -1,5 +1,5 @@
 [twitch]
-channel=""
+channels=[""]
 clientid=""
 token=""
 
@@ -8,6 +8,5 @@ host=""
 database=""
 user=""
 password=""
-table=""
 # Optional, will default to 3306 if undefined
 # port=""
