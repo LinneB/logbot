@@ -1,4 +1,4 @@
-const tmi = require("tmi.js");
+const { ChatClient } = require("dank-twitch-irc");
 const mysql = require("mysql");
 const fs = require("fs");
 const emoji = require("node-emoji");
@@ -20,31 +20,27 @@ const pool = mysql.createPool({
 
 let channelLive = false;
 
-const client = new tmi.client({
-  channels: [config.twitch.channel]
-});
+let client = new ChatClient();
 
-client.on("message", (channel, tags, message, self) => {
-  const {
-    username,
-    vip = false,
-    mod = false,
-    subscriber = false
-  } = tags;
-  // Replace emojis with their text representation & remove invalid characters
-  const demojifiedMessage = emoji
-    .unemojify(message)
-    .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "");
-  console.log(`INFO: ${channelLive ? "Live " : "Offline "}[${channel}] ${subscriber ? "SUB " : ""}${mod ? "MOD " : ""}${vip ? "VIP " : ""}${username}: ${demojifiedMessage}`);
+client.on("PRIVMSG", (msg) => {
+  let channel = msg.channelName;
+  let username = msg.senderUsername;
+  let message = msg.messageText;
+  let mod = msg.isMod || false;
+  let vip = msg.ircTags.vip === '1' ? true : false;
+  let subscriber = msg.ircTags.subscriber === '1' ? true : false;
+  console.log(`INFO: ${channelLive ? "Live " : "Offline "}[${channel}] ${subscriber ? "SUB " : ""}${mod ? "MOD " : ""}${vip ? "VIP " : ""}${username}: ${message}`);
   const query = `INSERT INTO ${table} (channel, username, message, live, isvip, ismod, issub) VALUES (?, ?, ?, ?, ?, ?, ?)`;
   pool.query(
     query,
-    [channel, username, demojifiedMessage, channelLive, vip, mod, subscriber],
+    [channel, username, emoji.unemojify(message).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, ""), channelLive, vip, mod, subscriber],
     (err, _) => {
       if (err) console.error("ERROR: Error inserting into database: ", err);
-    }
+    },
   );
 });
+
+client.on("ready", () => console.log("INFO: Connected to Twitch"));
 
 (async () => {
   channelLive = await utils.checkIfLive(config);
@@ -65,11 +61,5 @@ process.on("SIGTERM", () => {
   process.exit();
 });
 
-client
-  .connect()
-  .then(() => {
-    console.log("INFO: Connected to Twitch");
-  })
-  .catch((err) => {
-    console.error("ERROR: Error connecting to Twitch: ", err);
-  });
+client.connect();
+client.join(config.twitch.channel);
