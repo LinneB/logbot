@@ -1,26 +1,31 @@
 const axios = require("axios");
 
-async function checkIfLive(config = {}) {
-  const { channel, clientid, token } = config.twitch;
-  try {
-    const channelStreamResponse = await axios.get(
-      `https://api.twitch.tv/helix/streams?user_login=${channel}`,
-      {
-        headers: {
-          "Client-ID": clientid,
-          Authorization: `Bearer ${token}`,
+async function updateLiveStatus() {
+  const channels = logbot.config.twitch.channels;
+  for (let i = 0; i < channels.length; i++) {
+    const channel = channels[i];
+    try {
+      const response = await axios.get(
+        `https://api.twitch.tv/helix/streams?user_login=${channel}`,
+        {
+          headers: {
+            "Client-ID": logbot.config.twitch.clientid,
+            Authorization: `Bearer ${logbot.config.twitch.token}`,
+          },
         },
-      }
-    );
-    const {
-      data: { data: streamData },
-    } = channelStreamResponse || {};
-    return streamData.length > 0;
-  } catch (error) {
-    console.error(`ERROR: Error getting live status: `, error);
-  }
-}
+      );
+      if (response.status === 200) {
+        logbot.livestatus[channel.toLowerCase()] = response.data.data.length > 0;
+        console.log(`INFO: ${channel.toLowerCase()} is ${response.data.data.length > 0 ? "online" : "offline"}`)
+      } else {
+        console.error(`ERROR: Twitch API request returned status code ${response.status}: ${response.data}`);
+      };
+    } catch(error) {
+      console.error("ERROR: Could not update live status: ", error.response.data);
+    };
+  };
+};
 
 module.exports = {
-  checkIfLive,
+  updateLiveStatus,
 };
