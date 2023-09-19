@@ -1,7 +1,7 @@
 [twitch]
 channels=[""]
 clientid=""
-token=""
+secret=""
 
 [database]
 host=""
