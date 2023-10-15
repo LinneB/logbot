@@ -1,0 +1,12 @@
+[twitch]
+channels=[""]
+clientid=""
+secret=""
+
+[database]
+host=""
+database=""
+user=""
+password=""
+# Optional, will default to 3306 if undefined
+# port=""

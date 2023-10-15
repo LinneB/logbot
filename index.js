@@ -1,85 +1,58 @@
-const tmi = require("tmi.js");
+const { ChatClient } = require("dank-twitch-irc");
 const mysql = require("mysql");
 const fs = require("fs");
 const emoji = require("node-emoji");
+const toml = require("toml");
 const utils = require("./utils");
 
-// Read config.json
-const config = utils.parseJSON(fs.readFileSync("config.json"), {});
+// Global object for storing config and livestatus
+globalThis.logbot = {};
+logbot.livestatus = {};
+logbot.config = toml.parse(fs.readFileSync("config.toml"));
 
-const { database = {}, twitch = {} } = config || {};
+const { host, user, password, database, port = 3306, table } = logbot.config.database;
 
-const { host, user, password, name: databaseName, table } = database;
-
-const db = mysql.createConnection({
+const pool = mysql.createPool({
   host,
   user,
   password,
-  database: databaseName,
+  database,
+  port,
+  connectionLimit: 50,
 });
 
-// Connect to the database
-db.connect((err) => {
-  if (err) {
-    console.error("Error connecting to database: ", err);
-    return;
-  }
-  console.log("Connected to database!");
-});
+let client = new ChatClient();
 
-const { botUsername, botOauth, channel, liveInterval} = twitch;
-
-// Twitch configuration options
-const opts = {
-  identity: {
-    username: botUsername,
-    password: botOauth,
-  },
-  channels: [channel],
-};
-
-// Global variable used in multiple functional scopes - TODO: Can this be scoped?
-let channelLive = false;
-
-// Create a client with the given options
-const client = new tmi.client(opts);
-
-// Register event handlers
-client.on("message", (channel, tags, message, self) => {
-  if (self) return; // Ignore messages from the bot
-
-  const username = tags.username;
-  const { vip: isVip = false, mod: isMod= false, subscriber: isSub = false } = tags || {};
-
-  // Replace emojis with their text representation & remove invalid characters
-  const demojifiedMessage = emoji
-    .unemojify(message)
-    .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "");
-  const sql = `INSERT INTO ${table} (channel, username, message, live, isvip, ismod, issub) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-  console.log(`${channelLive ? "Live " : "Offline "}[${channel}] ${isSub ? "SUB " : ""}${isMod ? "MOD " : ""}${isVip ? "VIP " : ""}${username}: ${message}`);
-  db.query(
-    sql,
-    [channel, username, demojifiedMessage, channelLive, isVip, isMod, isSub],
+client.on("PRIVMSG", (msg) => {
+  let channel = msg.channelName;
+  let username = msg.senderUsername;
+  let message = msg.messageText;
+  let channelLive = logbot.livestatus[channel.toLowerCase()] || false;
+  let mod = msg.isMod || false;
+  let vip = msg.ircTags.vip === '1' ? true : false;
+  let subscriber = msg.ircTags.subscriber === '1' ? true : false;
+  console.log(`INFO: ${channelLive ? "Live " : "Offline "}[${channel}] ${subscriber ? "SUB " : ""}${mod ? "MOD " : ""}${vip ? "VIP " : ""}${username}: ${message}`);
+  const query = `INSERT INTO ${channel} (username, message, live, isvip, ismod, issub) VALUES (?, ?, ?, ?, ?, ?)`;
+  pool.query(
+    query,
+    [username, emoji.unemojify(message).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, ""), channelLive, vip, mod, subscriber],
     (err, _) => {
-      if (err) console.error("Error inserting into database: ", err);
-    }
+      if (err) console.error("ERROR: Error inserting into database: ", err);
+    },
   );
 });
 
-// Check channel status every minute
-setInterval(async () => {
-  channelLive = await utils.checkIfLive(channel, config);
-  console.log(
-    `Channel ${channel} is ${channelLive ? "live" : "offline"}`
-  );
-}, liveInterval);
+client.on("ready", () => console.log("INFO: Connected to Twitch"));
 
-// Connect to Twitch
-client
-  .connect()
-  .then(() => {
-    console.log("Connected to Twitch!");
-  })
-  .catch((err) => {
-    console.error("Error connecting to Twitch: ", err);
-  });
+utils.updateLiveStatus();
+setInterval(() => {
+  utils.updateLiveStatus();
+}, 60000);
+
+// This signal handler is required for the logbot to shut down properly when running in docker
+process.on("SIGTERM", () => {
+  process.exit();
+});
+
+client.connect();
+client.joinAll(logbot.config.twitch.channels);
