@@ -10,7 +10,7 @@ globalThis.logbot = {};
 logbot.livestatus = {};
 logbot.config = toml.parse(fs.readFileSync("config.toml"));
 
-const { host, user, password, database, port = 3306, table } = logbot.config.database;
+const { host, user, password, database, port = 3306 } = logbot.config.database;
 
 const pool = mysql.createPool({
   host,
@@ -29,14 +29,14 @@ client.on("PRIVMSG", (msg) => {
   let message = msg.messageText;
   let channelLive = logbot.livestatus[channel.toLowerCase()] || false;
   let mod = msg.isMod || false;
-  let vip = msg.ircTags.vip === '1' ? true : false;
-  let subscriber = msg.ircTags.subscriber === '1' ? true : false;
+  let vip = msg.ircTags.vip === "1" ? true : false;
+  let subscriber = msg.ircTags.subscriber === "1" ? true : false;
   console.log(`INFO: ${channelLive ? "Live " : "Offline "}[${channel}] ${subscriber ? "SUB " : ""}${mod ? "MOD " : ""}${vip ? "VIP " : ""}${username}: ${message}`);
   const query = `INSERT INTO ${channel} (username, message, live, isvip, ismod, issub) VALUES (?, ?, ?, ?, ?, ?)`;
   pool.query(
     query,
     [username, emoji.unemojify(message).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, ""), channelLive, vip, mod, subscriber],
-    (err, _) => {
+    (err) => {
       if (err) console.error("ERROR: Error inserting into database: ", err);
     },
   );

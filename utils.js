@@ -10,7 +10,7 @@ async function generateToken() {
     },
     {
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
+        "Content-Type": "application/x-www-form-urlencoded"
       }
     }
   );
@@ -33,18 +33,18 @@ async function updateLiveStatus() {
         },
       );
       logbot.livestatus[channel.toLowerCase()] = response.data.data.length > 0;
-      console.log(`INFO: ${channel.toLowerCase()} is ${response.data.data.length > 0 ? "online" : "offline"}`)
+      console.log(`INFO: ${channel.toLowerCase()} is ${response.data.data.length > 0 ? "online" : "offline"}`);
     } catch(error) {
       if (logbot.config.twitch.token) {
         console.info("INFO: Invalid token, generating a new one...");
       } else {
-        console.info("INFO: Generating token...")
+        console.info("INFO: Generating token...");
       }
       generateToken();
       break;
-    };
-  };
-};
+    }
+  }
+}
 
 module.exports = {
   updateLiveStatus,
