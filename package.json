@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint ."
   },
   "engines": {
     "node": "<=18"
@@ -18,5 +19,8 @@
     "mysql": "^2.18.1",
     "node-emoji": "^1.11.0",
     "toml": "^3.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.51.0"
   }
 }
