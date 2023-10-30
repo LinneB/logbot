@@ -1,5 +1,5 @@
 const { ChatClient } = require("dank-twitch-irc");
-const mysql = require("mysql");
+const { Pool }= require("pg");
 const fs = require("fs");
 const emoji = require("node-emoji");
 const toml = require("toml");
@@ -10,15 +10,15 @@ globalThis.logbot = {};
 logbot.livestatus = {};
 logbot.config = toml.parse(fs.readFileSync("config.toml"));
 
-const { host, user, password, database, port = 3306 } = logbot.config.database;
+const { host, user, password, database, port = 5432 } = logbot.config.database;
 
-const pool = mysql.createPool({
+const pool = new Pool({
   host,
   user,
   password,
   database,
   port,
-  connectionLimit: 50,
+  max: 20,
 });
 
 let client = new ChatClient();
@@ -26,20 +26,19 @@ let client = new ChatClient();
 client.on("PRIVMSG", (msg) => {
   let channel = msg.channelName;
   let username = msg.senderUsername;
-  let message = msg.messageText;
+  let message = emoji.unemojify(msg.messageText);
   let channelLive = logbot.livestatus[channel.toLowerCase()] || false;
   let mod = msg.isMod || false;
   let vip = msg.ircTags.vip === "1" ? true : false;
   let subscriber = msg.ircTags.subscriber === "1" ? true : false;
   console.log(`INFO: ${channelLive ? "Live " : "Offline "}[${channel}] ${subscriber ? "SUB " : ""}${mod ? "MOD " : ""}${vip ? "VIP " : ""}${username}: ${message}`);
-  const query = `INSERT INTO ${channel} (username, message, live, isvip, ismod, issub) VALUES (?, ?, ?, ?, ?, ?)`;
+  const query = `INSERT INTO ${channel} (username, message, live, isvip, ismod, issub) VALUES ($1, $2, $3, $4, $5, $6)`;
   pool.query(
     query,
-    [username, emoji.unemojify(message).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, ""), channelLive, vip, mod, subscriber],
-    (err) => {
-      if (err) console.error("ERROR: Error inserting into database: ", err);
-    },
-  );
+    [username, message, channelLive, vip, mod, subscriber]
+  ).catch(err => {
+    console.error(err);
+  });
 });
 
 client.on("ready", () => console.log("INFO: Connected to Twitch"));
