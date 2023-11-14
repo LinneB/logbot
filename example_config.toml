@@ -8,5 +8,5 @@ host=""
 database=""
 user=""
 password=""
-# Optional, will default to 3306 if undefined
+# Optional, will default to 5432 if undefined
 # port=""
