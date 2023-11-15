@@ -1,7 +1,8 @@
 const { Pool }= require("pg");
 const { generateDateQueryParams } = require("./utils");
+const config = require("./config");
 
-const { host, user, password, database, port = 5432 } = logbot.config.database;
+const { host, user, password, database, port = 5432 } = config.database;
 
 const pool = new Pool({
   host,

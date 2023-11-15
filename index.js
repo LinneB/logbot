@@ -3,13 +3,10 @@ const fs = require("fs");
 const emoji = require("node-emoji");
 const toml = require("toml");
 const utils = require("./utils");
-
-// Global object for storing config and livestatus
-globalThis.logbot = {};
-logbot.livestatus = {};
-logbot.config = toml.parse(fs.readFileSync("config.toml"));
-
+const config = require("./config");
 const db = require("./db");
+
+let livestatus = {};
 
 let client = new ChatClient();
 
@@ -17,7 +14,7 @@ client.on("PRIVMSG", (msg) => {
   let channel = msg.channelName;
   let username = msg.senderUsername;
   let message = emoji.unemojify(msg.messageText);
-  let channelLive = logbot.livestatus[channel.toLowerCase()] || false;
+  let channelLive = livestatus[channel.toLowerCase()] || false;
   let mod = msg.isMod || false;
   let vip = msg.ircTags.vip === "1" ? true : false;
   let subscriber = msg.ircTags.subscriber === "1" ? true : false;
@@ -27,9 +24,9 @@ client.on("PRIVMSG", (msg) => {
 
 client.on("ready", () => console.log("INFO: Connected to Twitch"));
 
-utils.updateLiveStatus();
+utils.updateLiveStatus().then((status) => livestatus = status);
 setInterval(() => {
-  utils.updateLiveStatus();
+  utils.updateLiveStatus().then((status) => livestatus = status);
 }, 60000);
 
 // This signal handler is required for the logbot to shut down properly when running in docker
@@ -38,4 +35,4 @@ process.on("SIGTERM", () => {
 });
 
 client.connect();
-client.joinAll(logbot.config.twitch.channels);
+client.joinAll(config.twitch.channels);

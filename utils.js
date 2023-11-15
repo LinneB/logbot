@@ -1,7 +1,10 @@
 const axios = require("axios");
+const config = require("./config");
+
+let token = null;
 
 async function generateToken() {
-  const { clientid, secret } = logbot.config.twitch;
+  const { clientid, secret } = config.twitch;
   const response = await axios.post("https://id.twitch.tv/oauth2/token",
     {
       client_id: clientid,
@@ -14,36 +17,43 @@ async function generateToken() {
       }
     }
   );
-  logbot.config.twitch.token = response.data.access_token;
-  updateLiveStatus();
+  return response.data.access_token;
+}
+
+async function checkIfLive(channel) {
+  try {
+    const response = await axios.get(
+      `https://api.twitch.tv/helix/streams?user_login=${channel}`,
+      {
+        headers: {
+          "Client-ID": config.twitch.clientid,
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    return response.data.data.length > 0;
+  } catch (err) {
+    if (err.response.status === 401) {
+      console.log("INFO: Token invalid, getting a new one...");
+      token = await generateToken();
+      return checkIfLive(channel);
+    }
+  }
 }
 
 async function updateLiveStatus() {
-  const channels = logbot.config.twitch.channels;
-  for (let i = 0; i < channels.length; i++) {
-    const channel = channels[i];
-    try {
-      const response = await axios.get(
-        `https://api.twitch.tv/helix/streams?user_login=${channel}`,
-        {
-          headers: {
-            "Client-ID": logbot.config.twitch.clientid,
-            Authorization: `Bearer ${logbot.config.twitch.token}`,
-          },
-        },
-      );
-      logbot.livestatus[channel.toLowerCase()] = response.data.data.length > 0;
-      console.log(`INFO: ${channel.toLowerCase()} is ${response.data.data.length > 0 ? "online" : "offline"}`);
-    } catch(error) {
-      if (logbot.config.twitch.token) {
-        console.info("INFO: Invalid token, generating a new one...");
-      } else {
-        console.info("INFO: Generating token...");
-      }
-      generateToken();
-      break;
-    }
+  if (!token) {
+    console.log("INFO: Generating token...");
+    token = await generateToken();
   }
+  let livestatus = {};
+  const channels = config.twitch.channels;
+  for (const channel of channels) {
+    const live = await checkIfLive(channel);
+    livestatus[channel.toLowerCase()] = live;
+    console.log(`INFO: ${channel.toLowerCase()} is ${live ? "online" : "offline"}`);
+  }
+  return livestatus;
 }
 
 // Generates the date parameters to be used in database queries
