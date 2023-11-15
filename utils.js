@@ -46,7 +46,33 @@ async function updateLiveStatus() {
   }
 }
 
+// Generates the date parameters to be used in database queries
+// Super ugly solution, but it works
+function generateDateQueryParams(channel) {
+  const currentTime = new Date();
+  const startMonth = (currentTime.getMonth() + 1).toString().padStart(2, "0");
+  const startYear = currentTime.getFullYear();
+  // Increment time by one month
+  currentTime.setMonth(currentTime.getMonth() + 1);
+  const endMonth = (currentTime.getMonth() + 1).toString().padStart(2, "0");
+  const endYear = currentTime.getFullYear();
+
+  // Example: forsen_12_2023
+  const tableName = `${channel}_${startMonth}_${startYear}`;
+  // Example: 2023-12-01
+  const partitionStart = `${startYear}-${startMonth}-01`;
+  // Example: 2024-01-01
+  const partitionEnd = `${endYear}-${endMonth}-01`;
+
+  return {
+    tableName,
+    partitionStart,
+    partitionEnd,
+  };
+}
+
 module.exports = {
   updateLiveStatus,
   generateToken,
+  generateDateQueryParams,
 };

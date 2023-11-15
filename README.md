@@ -1,11 +1,7 @@
 # LinneB's Logbot
 
-A Node.js project that logs messages from a twitch chat into a MySQL/MariaDB database.
+A Node.js project that logs messages from a twitch chat into a PostgreSQL database.
 
-- [Dependencies](#dependencies)
-  - [Database](#database)
-  - [Running with Docker](#running-with-docker)
-  - [Running with Node.JS](#running-with-nodejs)
 - [Setup](#setup)
   - [Database Setup](#database-setup)
   - [Configuration](#configuration)
@@ -13,55 +9,16 @@ A Node.js project that logs messages from a twitch chat into a MySQL/MariaDB dat
   - [Docker](#docker)
   - [Manual](#manual)
 
-## Dependencies
-
-### Database
-
-- [MySQL](https://hub.docker.com/_/mysql) or [MariaDB](https://hub.docker.com/_/mariadb)
-
-### Running with Docker
-
-- [Docker](https://docs.docker.com/engine/install/)
-- [Docker Compose](https://docs.docker.com/compose/install/)
-
-### Running with Node.JS
-
-- [Node.JS](https://nodejs.org/en)
-- [npm](https://nodejs.org/en)
-
 ## Setup
 
 ### Database Setup
 
-You first need to create a database:
+You will obviously need a PostgreSQL database. You can run it using [Docker](https://hub.docker.com/_/postgres) or as a native package per your operating system.
+
+If you want to, you can create a dedicated database rather than using the default 'root' database:
 
 ```sql
-CREATE DATABASE IF NOT EXISTS logbot;
-```
-
-You then need to create a table for each channel you want to log.
-
-NOTE: Make sure the table name is the same as the lowercase twitch channel name
-
-```sql
-CREATE TABLE forsen (
-    id INT NOT NULL AUTO_INCREMENT,
-    username VARCHAR(50) NOT NULL,
-    message VARCHAR(600),
-    live TINYINT(1) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    isvip TINYINT(1) NOT NULL DEFAULT 0,
-    ismod TINYINT(1) NOT NULL DEFAULT 0,
-    issub TINYINT(1) NOT NULL DEFAULT 0,
-    PRIMARY KEY (id)
-);
-```
-
-It's also good practice to create a seperate user with limited permissions
-
-```sql
-CREATE USER 'logbot'@'%' IDENTIFIED BY 'supersecurepassword';
-GRANT INSERT ON logbot.logs TO 'logbot'@'%';
+CREATE DATABASE logbot;
 ```
 
 ### Configuration
@@ -70,16 +27,16 @@ Rename the example config file to `config.toml` and add your Twitch and database
 
 ```toml
 [twitch]
-channels=["forsen"]
+channels=["forsen", "LinneB"]
 clientid="abdef123456"
-token="abcdef123456"
+secret="abcdef123456"
 
 [database]
 host=""
 database=""
 user=""
 password=""
-# Optional, will default to 3306 if undefined
+# Optional, will default to 5432
 # port=""
 ```
 
@@ -103,13 +60,13 @@ docker-compose logs
 
 ### Manual
 
-After setting up your config file, you can install the dependencies using npm:
+First you need to install the dependencies using npm:
 
 ```sh
 npm install
 ```
 
-After that you can run the script using node:
+After that you can simply run the script using node:
 
 ```sh
 node index.js
