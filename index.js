@@ -1,7 +1,5 @@
 const { ChatClient } = require("dank-twitch-irc");
-const fs = require("fs");
 const emoji = require("node-emoji");
-const toml = require("toml");
 const utils = require("./utils");
 const config = require("./config");
 const db = require("./db");
