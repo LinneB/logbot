@@ -8,6 +8,7 @@ A Node.js project that logs messages from a twitch chat into a PostgreSQL databa
 - [Usage](#usage)
   - [Docker](#docker)
   - [Manual](#manual)
+- [Contributing](#contributing)
 
 ## Setup
 
@@ -71,3 +72,13 @@ After that you can simply run the script using node:
 ```sh
 node index.js
 ```
+
+## Contributing
+
+Contributions are welcome, just open up a pull request.
+
+**Make sure you run `npm run lint` and fix any errors before commiting.**
+
+If you're reporting a bug or have a feature request, please open an issue.
+
+If you have any questions, feel free reach out to me on [Twitch](https://twitch.tv/LinneB)
