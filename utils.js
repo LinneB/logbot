@@ -5,19 +5,28 @@ let token = null;
 
 async function generateToken() {
   const { clientid, secret } = config.twitch;
-  const response = await axios.post("https://id.twitch.tv/oauth2/token",
-    {
-      client_id: clientid,
-      client_secret: secret,
-      grant_type: "client_credentials"
-    },
-    {
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
+  try {
+    const response = await axios.post("https://id.twitch.tv/oauth2/token",
+      {
+        client_id: clientid,
+        client_secret: secret,
+        grant_type: "client_credentials"
+      },
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
       }
+    );
+    return response.data.access_token;
+  } catch (err) {
+    if (err.response.status === 400) {
+      console.log("ERROR: Could not generate token");
+      process.exit(1);
+    } else {
+      throw err;
     }
-  );
-  return response.data.access_token;
+  }
 }
 
 async function checkIfLive(channel) {
@@ -33,10 +42,15 @@ async function checkIfLive(channel) {
     );
     return response.data.data.length > 0;
   } catch (err) {
-    if (err.response.status === 401) {
+    if (err.response.status === 400) {
+      console.log(`ERROR: Could not get live status of ${channel}, does this user exist?`);
+      process.exit(1);
+    } else if (err.response.status === 401) {
       console.log("INFO: Token invalid, getting a new one...");
       token = await generateToken();
       return checkIfLive(channel);
+    } else{
+      throw err;
     }
   }
 }
