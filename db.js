@@ -1,7 +1,7 @@
 const { Pool }= require("pg");
 const { generateDateQueryParams } = require("./utils");
 const config = require("./config");
-const log = require("loglevel")
+const log = require("loglevel");
 log.setLevel(config.misc.loglevel || "info");
 
 const { host, user, password, database, port = 5432 } = config.database;
