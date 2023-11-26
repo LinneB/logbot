@@ -3,6 +3,8 @@ const emoji = require("node-emoji");
 const utils = require("./utils");
 const config = require("./config");
 const db = require("./db");
+const log = require("loglevel");
+log.setLevel(config.misc.loglevel || "info");
 
 let livestatus = {};
 
@@ -16,11 +18,11 @@ client.on("PRIVMSG", (msg) => {
   let mod = msg.isMod || false;
   let vip = msg.ircTags.vip === "1" ? true : false;
   let subscriber = msg.ircTags.subscriber === "1" ? true : false;
-  console.log(`INFO: ${channelLive ? "Live " : "Offline "}[${channel}] ${subscriber ? "SUB " : ""}${mod ? "MOD " : ""}${vip ? "VIP " : ""}${username}: ${message}`);
+  log.debug(`DEBUG: ${channelLive ? "Live " : "Offline "}[${channel}] ${subscriber ? "SUB " : ""}${mod ? "MOD " : ""}${vip ? "VIP " : ""}${username}: ${message}`);
   db.insertMessage(channel, username, message, channelLive, vip, mod, subscriber);
 });
 
-client.on("ready", () => console.log("INFO: Connected to Twitch"));
+client.on("ready", () => log.info("INFO: Connected to Twitch"));
 
 utils.updateLiveStatus().then((status) => livestatus = status);
 setInterval(() => {

@@ -27,6 +27,10 @@ CREATE DATABASE logbot;
 Rename the example config file to `config.toml` and add your Twitch and database details.
 
 ```toml
+[misc]
+# Levels: trace, debug, info, warn, error, silent
+# loglevel="info"
+
 [twitch]
 channels=["forsen", "LinneB"]
 clientid="abdef123456"

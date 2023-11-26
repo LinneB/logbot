@@ -1,5 +1,7 @@
 const axios = require("axios");
 const config = require("./config");
+const log = require("loglevel");
+log.setLevel(config.misc.loglevel || "info");
 
 let token = null;
 
@@ -21,7 +23,7 @@ async function generateToken() {
     return response.data.access_token;
   } catch (err) {
     if (err.response.status === 400) {
-      console.log("ERROR: Could not generate token");
+      log.error("ERROR: Could not generate token");
       process.exit(1);
     } else {
       throw err;
@@ -43,10 +45,10 @@ async function checkIfLive(channel) {
     return response.data.data.length > 0;
   } catch (err) {
     if (err.response.status === 400) {
-      console.log(`ERROR: Could not get live status of ${channel}, does this user exist?`);
+      log.error(`ERROR: Could not get live status of ${channel}, does this user exist?`);
       process.exit(1);
     } else if (err.response.status === 401) {
-      console.log("INFO: Token invalid, getting a new one...");
+      log.info("INFO: Token invalid, getting a new one...");
       token = await generateToken();
       return checkIfLive(channel);
     } else{
@@ -57,7 +59,7 @@ async function checkIfLive(channel) {
 
 async function updateLiveStatus() {
   if (!token) {
-    console.log("INFO: Generating token...");
+    log.info("INFO: Generating token...");
     token = await generateToken();
   }
   let livestatus = {};
@@ -65,7 +67,7 @@ async function updateLiveStatus() {
   for (const channel of channels) {
     const live = await checkIfLive(channel);
     livestatus[channel.toLowerCase()] = live;
-    console.log(`INFO: ${channel.toLowerCase()} is ${live ? "online" : "offline"}`);
+    log.debug(`DEBUG: ${channel.toLowerCase()} is ${live ? "online" : "offline"}`);
   }
   return livestatus;
 }
