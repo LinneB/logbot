@@ -1,6 +1,8 @@
 const { Pool }= require("pg");
 const { generateDateQueryParams } = require("./utils");
 const config = require("./config");
+const log = require("loglevel")
+log.setLevel(config.misc.loglevel || "info");
 
 const { host, user, password, database, port = 5432 } = config.database;
 
@@ -26,9 +28,9 @@ async function createTable(channel) {
 ) PARTITION BY RANGE (created_at);`;
   try {
     await pool.query(query);
-    console.log(`INFO: Created table: ${channel}`);
+    log.info(`INFO: Created table: ${channel}`);
   } catch (err) {
-    console.error(err);
+    log.error(err);
   }
 }
 
@@ -43,9 +45,9 @@ async function createPartition(channel) {
   const query = `CREATE TABLE ${tableName} PARTITION OF ${channel} FOR VALUES FROM ('${partitionStart}') TO ('${partitionEnd}');`;
   try {
     await pool.query(query);
-    console.log(`INFO: Created table partition: ${tableName}`);
+    log.info(`INFO: Created table partition: ${tableName}`);
   } catch (err) {
-    console.error(err);
+    log.error(err);
   }
 }
 
@@ -66,7 +68,7 @@ async function insertMessage(channel, username, message, channelLive, vip, mod, 
       await createPartition(channel);
       insertMessage(channel, username, message, channelLive, vip, mod, subscriber);
     } else {
-      console.error(err);
+      log.error(err);
     }
   }
 }
