@@ -4,6 +4,33 @@ const config = require("./config");
 const log = require("loglevel");
 log.setLevel(config.misc.loglevel || "info");
 
+const queries = {
+  insert: {
+    log: (channel) => `
+      INSERT INTO ${channel} (username, message, live, isvip, ismod, issub)
+      VALUES ($1, $2, $3, $4, $5, $6)
+    `,
+  },
+  create: {
+    partition: (tableName, channel, partitionStart, partitionEnd) => `
+      CREATE TABLE ${tableName}
+      PARTITION OF ${channel}
+      FOR VALUES FROM ('${partitionStart}') TO ('${partitionEnd}');
+    `,
+    table: (channel) => `
+      CREATE TABLE IF NOT EXISTS ${channel} (
+        id SERIAL,
+        username VARCHAR NOT NULL,
+        message VARCHAR NOT NULL,
+        live BOOLEAN NOT NULL,
+        created_at TIMESTAMP(3) WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+        isvip BOOLEAN NOT NULL DEFAULT FALSE,
+        ismod BOOLEAN NOT NULL DEFAULT FALSE,
+        issub BOOLEAN NOT NULL DEFAULT FALSE
+      ) PARTITION BY RANGE (created_at);
+    `,
+  },
+};
 const { host, user, password, database, port = 5432 } = config.database;
 
 const pool = new Pool({
@@ -16,16 +43,7 @@ const pool = new Pool({
 });
 
 async function createTable(channel) {
-  const query = `CREATE TABLE IF NOT EXISTS ${channel} (
-    id SERIAL,
-    username VARCHAR NOT NULL,
-    message VARCHAR NOT NULL,
-    live BOOLEAN NOT NULL,
-    created_at TIMESTAMP(3) WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    isvip BOOLEAN NOT NULL DEFAULT FALSE,
-    ismod BOOLEAN NOT NULL DEFAULT FALSE,
-    issub BOOLEAN NOT NULL DEFAULT FALSE
-) PARTITION BY RANGE (created_at);`;
+  const query = queries.create.table(channel);
   try {
     await pool.query(query);
     log.info(`INFO: Created table: ${channel}`);
@@ -42,7 +60,7 @@ async function createPartition(channel) {
     partitionEnd
   } = generateDateQueryParams(channel);
 
-  const query = `CREATE TABLE ${tableName} PARTITION OF ${channel} FOR VALUES FROM ('${partitionStart}') TO ('${partitionEnd}');`;
+  const query = queries.create.partition(tableName, channel, partitionStart, partitionEnd);
   try {
     await pool.query(query);
     log.info(`INFO: Created table partition: ${tableName}`);
@@ -52,7 +70,7 @@ async function createPartition(channel) {
 }
 
 async function insertMessage(channel, username, message, channelLive, vip, mod, subscriber) {
-  const query = `INSERT INTO ${channel} (username, message, live, isvip, ismod, issub) VALUES ($1, $2, $3, $4, $5, $6)`;
+  const query = queries.insert.log(channel);
   try {
     await pool.query(
       query,
