@@ -3,8 +3,8 @@ import toml from "toml";
 
 function validateConfig(config) {
   const requiredOptions = {
-    "twitch": ["clientid", "secret", "channels"],
-    "database": ["host", "database", "user", "password"]
+    twitch: ["clientid", "secret", "channels"],
+    database: ["host", "database", "user", "password"],
   };
   for (const section of Object.keys(requiredOptions)) {
     if (!config[section]) {
@@ -12,7 +12,9 @@ function validateConfig(config) {
     }
     for (const option of requiredOptions[section]) {
       if (!config[section][option]) {
-        throw new Error(`Missing ${option} option in ${section} section of config file`);
+        throw new Error(
+          `Missing ${option} option in ${section} section of config file`,
+        );
       }
     }
   }
