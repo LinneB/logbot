@@ -1,10 +1,9 @@
 import axios from "axios";
-import config from "../utils/config.js";
 import log4js from "../utils/logger.js";
 import { chunkArray } from "../utils/utils.js";
 const logger = log4js.getLogger("helix");
 
-class HelixWrapper {
+export class HelixWrapper {
   constructor(config) {
     this._config = config;
     this._livestatus = {};
@@ -89,5 +88,3 @@ class HelixWrapper {
     return this._livestatus[channel] || false;
   }
 }
-
-export const helix = new HelixWrapper(config.twitch);

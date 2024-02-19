@@ -2,9 +2,10 @@ import { ChatClient } from "dank-twitch-irc";
 import config from "./utils/config.js";
 import log4js from "./utils/logger.js";
 import * as db from "./providers/db.js";
-import { helix } from "./providers/helix.js";
+import { HelixWrapper } from "./providers/helix.js";
 const client = new ChatClient();
 const logger = log4js.getLogger("main");
+const helix = new HelixWrapper(config.twitch);
 
 const onConnecting = () => logger.info("Connecting to chat...");
 
