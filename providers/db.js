@@ -4,18 +4,7 @@ import log4js from "../utils/logger.js";
 const { Pool } = pg;
 const logger = log4js.getLogger("database");
 
-if (!config.database) {
-  logger.fatal("Missing database section in config");
-  process.exit(1);
-}
-
 const { host, user, password, database, port = 5432 } = config.database;
-
-if (!host || !user || !password || !database) {
-  logger.fatal("Missing options in config database section");
-  process.exit(1);
-}
-
 export const pool = new Pool({
   host,
   user,
