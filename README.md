@@ -81,7 +81,7 @@ node index.js
 
 Contributions are welcome, just open up a pull request.
 
-**Make sure you run `npm run lint` and fix any errors before commiting.**
+**Before commiting, make sure you format your changes using `npm run format` and fix any linting errors from `npm run lint`**
 
 If you're reporting a bug or have a feature request, please open an issue.
 
