@@ -6,7 +6,7 @@ log4js.configure({
     console: { type: "stdout" },
   },
   categories: {
-    default: { appenders: ["console"], level: config.misc.loglevel || "info" },
+    default: { appenders: ["console"], level: config.misc?.loglevel || "info" },
   },
 });
 
