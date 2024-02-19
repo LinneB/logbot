@@ -1,38 +1,70 @@
-const { ChatClient } = require("dank-twitch-irc");
-const emoji = require("node-emoji");
-const utils = require("./utils");
-const config = require("./config");
-const db = require("./db");
-const log = require("loglevel");
-log.setLevel(config.misc.loglevel || "info");
+import { ChatClient } from "dank-twitch-irc";
+import config from "./utils/config.js";
+import log4js from "./utils/logger.js";
+import * as db from "./providers/db.js";
+import { HelixWrapper } from "./providers/helix.js";
+const client = new ChatClient();
+const logger = log4js.getLogger("main");
+const helix = new HelixWrapper(config.twitch);
 
-let livestatus = {};
+const onConnecting = () => logger.info("Connecting to chat...");
 
-let client = new ChatClient();
+const onConnected = () => logger.info("Succesfully connected to chat");
 
-client.on("PRIVMSG", (msg) => {
-  let channel = msg.channelName;
-  let username = msg.senderUsername;
-  let message = emoji.unemojify(msg.messageText);
-  let channelLive = livestatus[channel.toLowerCase()] || false;
-  let mod = msg.isMod || false;
-  let vip = msg.ircTags.vip === "1" ? true : false;
-  let subscriber = msg.ircTags.subscriber === "1" ? true : false;
-  log.debug(`DEBUG: ${channelLive ? "Live " : "Offline "}[${channel}] ${subscriber ? "SUB " : ""}${mod ? "MOD " : ""}${vip ? "VIP " : ""}${username}: ${message}`);
-  db.insertMessage(channel, username, message, channelLive, vip, mod, subscriber);
+const onMessage = async (msg) => {
+  const log = {
+    channel: msg.channelName,
+    channelID: msg.ircTags["room-id"],
+    sender: msg.senderUsername,
+    senderDisplayname: msg.ircTags["display-name"],
+    senderID: msg.senderUserID,
+    message: msg.messageText,
+    color: msg.colorRaw,
+    vip: msg.ircTags.vip === "1" ? true : false,
+    sub: msg.ircTags.subscriber === "1" ? true : false,
+    mod: msg.isMod,
+    live: helix.getLivestatus(msg.channelName),
+  };
+  logger.debug(
+    `[#${log.channel}] ${log.live ? "LIVE " : ""}${log.vip ? "VIP " : ""}${log.sub ? "SUB " : ""}${log.mod ? "MOD " : ""}${log.senderDisplayname}: ${log.message}`,
+  );
+  db.insertLog(log);
+};
+
+await db.pool
+  .query({
+    text: db.queries.CREATE.table,
+  })
+  .then(() => {
+    logger.debug("Created logs table");
+  })
+  .catch((e) => {
+    logger.error(e);
+  });
+
+let queries = [];
+for (const channel of config.twitch.channels) {
+  queries.push(
+    await db.pool
+      .query({
+        text: db.queries.CREATE.partition(channel.toLowerCase()),
+      })
+      .then(() => {
+        logger.debug(`Created partition for ${channel}`);
+      }),
+  );
+}
+await Promise.all(queries).catch((e) => {
+  logger.error(e);
 });
 
-client.on("ready", () => log.info("INFO: Connected to Twitch"));
-
-utils.updateLiveStatus().then((status) => livestatus = status);
-setInterval(() => {
-  utils.updateLiveStatus().then((status) => livestatus = status);
-}, 60000);
+client.on("PRIVMSG", onMessage);
+client.on("connecting", onConnecting);
+client.on("ready", onConnected);
+client.connect();
+client.joinAll(config.twitch.channels);
 
 // This signal handler is required for the logbot to shut down properly when running in docker
 process.on("SIGTERM", () => {
   process.exit();
 });
-
-client.connect();
-client.joinAll(config.twitch.channels);
