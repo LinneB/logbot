@@ -28,7 +28,7 @@ Rename the example config file to `config.toml` and add your Twitch and database
 
 ```toml
 [misc]
-# Levels: trace, debug, info, warn, error, silent
+# Levels: off, fatal, error, warn, info, debug, trace, all
 # loglevel="info"
 
 [twitch]
