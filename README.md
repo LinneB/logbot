@@ -1,5 +1,7 @@
 # LinneB's Logbot
 
+## This project has been rewritten as [slugbot](https://github.com/LinneB/slugbot).
+
 A Node.js project that logs messages from a twitch chat into a PostgreSQL database.
 
 - [Setup](#setup)
